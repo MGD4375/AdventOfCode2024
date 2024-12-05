@@ -22,8 +22,6 @@ public static class Day5
                 .ToList())
             .ToList();
 
-        var orderLookup = GenerateOrderLookup(pageOrderingRules);
-
         //part 1
         {
             var part1Answer = pageLists
@@ -36,50 +34,44 @@ public static class Day5
 
         //part 2 
         {
-            var incorrectlyOrderedLists = pageLists
-                .Where(pl => !IsValid(pl, pageOrderingRules));
+            var p2Answer = pageLists
+                .Where(pl => !IsValid(pl, pageOrderingRules))
+                .Select((it, _) => CorrectList(it, pageOrderingRules))
+                .Select(pl => pl[pl.Count / 2])
+                .Sum();
+
+            Console.WriteLine("Part 2: " + p2Answer);
         }
     }
 
-    private static Dictionary<int, int> GenerateOrderLookup(
-        List<(int, int)> pageOrderingRules
-    )
+    private static List<int> CorrectList(List<int> pages, List<(int, int)> pageOrderingRules)
     {
-        var possiblePages = pageOrderingRules
-            .Select(r => r.Item1)
-            .Concat(pageOrderingRules.Select(r => r.Item2))
-            .Distinct()
-            .ToList();
-
-        var orderedList = new List<int>();
-        foreach (var item in possiblePages)
+        var workingList = new List<int>(pages);
+        var failingRule = GetFailingRule(pageOrderingRules, workingList);
+        while (failingRule != (0, 0))
         {
-            for (var orderedListIndex = 0; orderedListIndex < orderedList.Count + 1; orderedListIndex++)
-            {
-                var newList = new List<int>(orderedList);
-                newList.Insert(orderedListIndex, item);
-                var isValid = IsValid(newList, pageOrderingRules);
-
-                if (!isValid)
-                {
-                    continue;
-                }
-
-
-                orderedList = newList;
-                break;
-            }
+            Console.WriteLine($"Attempting to fix ({failingRule.Item1}|{failingRule.Item2})");
+            var indexA = workingList.IndexOf(failingRule.Item1);
+            var indexB = workingList.IndexOf(failingRule.Item2);
+            (workingList[indexA], workingList[indexB]) = (workingList[indexB], workingList[indexA]);
+            failingRule = GetFailingRule(pageOrderingRules, workingList);
         }
 
-        return orderedList
-            .Select((item, index) => new { Item = item, Index = index })
-            .ToDictionary(it => it.Item, it => it.Index);
+        return workingList;
     }
+
+    private static (int, int) GetFailingRule(List<(int, int)> pageOrderingRules, List<int> workingList)
+    {
+        return pageOrderingRules
+            .Where(r => workingList.Contains(r.Item1) && workingList.Contains(r.Item2))
+            .FirstOrDefault(r => workingList.IndexOf(r.Item1) > workingList.IndexOf(r.Item2));
+    }
+
 
     private static bool IsValid(List<int> list, IEnumerable<(int, int)> pageOrderingRules)
     {
         return pageOrderingRules
             .Where(r => list.Contains(r.Item1) && list.Contains(r.Item2))
-            .All(rule => list.IndexOf(rule.Item1) <= list.IndexOf(rule.Item2));
+            .All(rule => list.IndexOf(rule.Item1) < list.IndexOf(rule.Item2));
     }
 }
