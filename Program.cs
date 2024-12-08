@@ -26,5 +26,9 @@ Console.WriteLine("Advent of Code 2024!");
 // Console.WriteLine("Day 6");
 // Day6.Run();
 
-Console.WriteLine("Day 7");
-Day7.Run();
+// Console.WriteLine("Day 7");
+// Day7.Run();
+
+
+Console.WriteLine("Day 8");
+Day8.Run();
