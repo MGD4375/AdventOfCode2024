@@ -9,7 +9,7 @@ public static class Day8
         public Position MultipliedBy(int multiplier) => new(X * multiplier, Y * multiplier);
     };
 
-    public record Cell(Position Position, char Content);
+    private record Cell(Position Position, char Content);
 
     public static void Run()
     {
