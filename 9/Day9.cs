@@ -10,7 +10,6 @@ public static class Day9
 
         // Part 1
         {
-            // Map to intermediary view
             var view = input.SelectMany((ch, index) =>
                 {
                     var number = int.Parse(ch.ToString());
@@ -20,8 +19,6 @@ public static class Day9
                 })
                 .ToList();
 
-
-            // Shift blocks left
             var leftIndex = 0;
             var rightIndex = view.Count - 1;
             while (leftIndex < rightIndex)
@@ -43,18 +40,10 @@ public static class Day9
                 (view[leftIndex], view[rightIndex]) = (view[rightIndex], view[leftIndex]);
             }
 
-            // Console.WriteLine($"str: {view.Aggregate("", (str, ch) => str + ch)}");
-
             var output = view
                 .Where(ch => ch != Empty)
-                .Select((ch, index) =>
-                {
-                    var number = (long)ch;
-                    // Console.Write($"{number},");
-                    return number * index;
-                })
+                .Select((ch, index) => (long)ch * index)
                 .Sum();
-
 
             Console.WriteLine($"Part 1: {output}");
         }
