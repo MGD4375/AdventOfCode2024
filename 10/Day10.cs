@@ -1,4 +1,6 @@
-﻿namespace AdventOfCode2024._10;
+﻿using System.Runtime.Intrinsics.X86;
+
+namespace AdventOfCode2024._10;
 
 public static class Day10
 {
@@ -24,7 +26,10 @@ public static class Day10
 
         // Part 2
         {
-            Console.WriteLine($"Part 2:");
+            var trailHeads = map.Cells.IndicesOfMatches(0);
+            var paths = trailHeads.Select(trailHead => map.Cells.FindPaths2(trailHead));
+            var countOfUniquePaths = paths.Sum();
+            Console.WriteLine($"Part 2: {countOfUniquePaths}");
         }
     }
 
@@ -53,7 +58,6 @@ public class Map
     public int[,] Cells { get; private set; }
 }
 
-// Extension method to convert jagged array to 2D array
 public static class Extensions
 {
     private static readonly List<(int X, int Y)> RelativeNeighbourPositions =
@@ -82,7 +86,7 @@ public static class Extensions
             var (x, y) = cellQueue.Dequeue();
             var currentCellValue = map[x, y];
 
-            var nextCells = RelativeNeighbourPositions
+            var visitedCells = RelativeNeighbourPositions
                 .Select(pos => (X: pos.X + x, Y: pos.Y + y))
                 .Where(pos => pos.X >= 0 && pos.X < map.GetLength(1) && pos.Y >= 0 && pos.Y < map.GetLength(0))
                 .Select(pos => (Pos: pos, Cell: map[pos.X, pos.Y]))
@@ -90,11 +94,39 @@ public static class Extensions
                 .Where(it => !visited.Contains(it))
                 .ToList();
 
-            visited.AddRange(nextCells);
-            nextCells.Select(it => it.Pos).ToList().ForEach(it => cellQueue.Enqueue((it.X, it.Y)));
+            visited.AddRange(visitedCells);
+            visitedCells.Select(it => it.Pos).ToList().ForEach(it => cellQueue.Enqueue((it.X, it.Y)));
         }
 
         return visited;
+    }
+
+    public static int FindPaths2(this int[,] map, (int X, int Y) trailHead)
+    {
+        var cellQueue = new Queue<(int X, int Y)>();
+        cellQueue.Enqueue(trailHead);
+        var uniquePaths = 0;
+        while (cellQueue.Count != 0)
+        {
+            var (x, y) = cellQueue.Dequeue();
+            var currentCellValue = map[x, y];
+
+            var visitedCells = RelativeNeighbourPositions
+                .Select(pos => (X: pos.X + x, Y: pos.Y + y))
+                .Where(pos => pos.X >= 0 && pos.X < map.GetLength(1) && pos.Y >= 0 && pos.Y < map.GetLength(0))
+                .Select(pos => (Pos: pos, Cell: map[pos.X, pos.Y]))
+                .Where(it => it.Cell == currentCellValue + 1)
+                .ToList();
+
+            uniquePaths += visitedCells.Count(it => it.Cell == 9);
+
+            visitedCells
+                .Select(it => it.Pos)
+                .ToList()
+                .ForEach(it => cellQueue.Enqueue((it.X, it.Y)));
+        }
+
+        return uniquePaths;
     }
 
     public static T[,] To2DArray<T>(this T[][] source)
