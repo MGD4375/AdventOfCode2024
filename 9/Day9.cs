@@ -1,4 +1,4 @@
-﻿namespace AdventOfCode2024._7;
+﻿namespace AdventOfCode2024._9;
 
 public static class Day9
 {
