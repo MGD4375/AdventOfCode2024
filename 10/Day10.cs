@@ -52,7 +52,7 @@ public class Map
 {
     public Map(IEnumerable<IEnumerable<int>> data)
     {
-        Cells = data.Select(row => row.ToArray()).ToArray().To2DArray();
+        Cells = data.Select(row => row.ToArray()).ToArray().To2DArrayOld();
     }
 
     public int[,] Cells { get; private set; }

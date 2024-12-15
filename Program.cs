@@ -6,6 +6,7 @@ using AdventOfCode2024._11;
 using AdventOfCode2024._12;
 using AdventOfCode2024._13;
 using AdventOfCode2024._14;
+using AdventOfCode2024._15;
 using AdventOfCode2024._2;
 using AdventOfCode2024._3;
 using AdventOfCode2024._4;
@@ -53,5 +54,8 @@ Console.WriteLine("Advent of Code 2024!");
 // Console.WriteLine("Day 13");
 // Day13.Run();
 
-Console.WriteLine("Day 14");
-Day14.Run();
+// Console.WriteLine("Day 14");
+// Day14.Run();
+
+Console.WriteLine("Day 15");
+Day15.Run();
