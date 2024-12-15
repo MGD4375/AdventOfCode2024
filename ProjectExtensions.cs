@@ -11,15 +11,13 @@ public static class ProjectExtensions
             result[i, j] = source[i][j];
         return result;
     }
-    
+
     public static T[,] To2DArray<T>(this T[][] source)
     {
-        var result = new T[source.Length, source[0].Length];
+        var result = new T[source[0].Length, source.Length];
         for (var y = 0; y < source.Length; y++)
         for (var x = 0; x < source[y].Length; x++)
             result[x, y] = source[y][x];
         return result;
     }
-    
-    
 }
