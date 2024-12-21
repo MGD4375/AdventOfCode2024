@@ -19,12 +19,10 @@ public static class Day16
     {
         // Part 1
         {
-            var map = ParseInput("./16/test-input.txt");
+            var map = ParseInput("./16/input.txt");
             var reindeer = map.CoordinatesOf('S');
-            var flowMap = BuildFlowMap(map, (reindeer.X, reindeer.Y), '<');
-            PrintFlowMap(map, flowMap);
-            // var score = outcomes.MinBy(o => o.Cost);
-            // Console.WriteLine($"Part 1: {score}");
+            var score = RunPart1(map, (reindeer.X, reindeer.Y), '<');
+            Console.WriteLine($"Part 1: {score}");
         }
 
         // Part 2
@@ -34,115 +32,107 @@ public static class Day16
 
     private static readonly char[] MovableSpots = ['.', 'E'];
 
-    public static FlowMapItem[,] BuildFlowMap(
+    public static int RunPart1(
         char[,] map,
         Position startingPosition,
         char startingDirection
     )
     {
-        var queue = new Queue<(char Direction, Position Position, int Cost)>();
-        queue.Enqueue((startingDirection, startingPosition, 0));
-        var flowMap = new FlowMapItem[map.GetLength(0), map.GetLength(1)];
-        var holdingPen = new List<FlowMapItem>();
-        while (queue.Any() || holdingPen.Any())
+        var relativeOptions = new List<(char Direction, int X, int Y)>
         {
-            var current = queue.Dequeue();
-            var relativeOptions = new List<(char Direction, int X, int Y)>
-            {
-                ('>', +1, +0), // right
-                ('<', -1, +0), // left
-                ('v', +0, +1), // down
-                ('^', +0, -1), // up
-            };
+            ('>', +1, +0), // right
+            ('v', +0, +1), // down
+            ('<', -1, +0), // left
+            ('^', +0, -1), // up
+        };
 
-            var potentialMoves = relativeOptions
-                .Select(pos => (Direction: pos.Direction, X: current.Position.X + pos.X, Y: current.Position.Y + pos.Y))
-                .Where(pos => IsInBounds(map, (pos.X, pos.Y)))
-                .Select(pos => (
-                        Direction: pos.Direction,
-                        X: pos.X, Y: pos.Y,
-                        Value: map[pos.X, pos.Y],
-                        Cost: startingDirection == pos.Direction ? current.Cost + 1 : current.Cost + 1001,
-                        IsVisited: flowMap[pos.X, pos.Y].IsVisited ?? false
-                    )
-                )
-                .Where(t => MovableSpots.Contains(t.Value))
-                .Where(option => !option.IsVisited)
-                .ToList();
 
-            potentialMoves.ForEach(it =>
-            {
-                it.IsVisited = true;
-                flowMap[it.X, it.Y] = it;
-                if (it.Value != 'E')
-                {
-                    queue.Enqueue((it.Direction, (it.X, it.Y), it.Cost));
-                }
-            });
-        }
+        var queue = new PriorityQueue<(char Direction, Position Position, int Cost), int>();
+        queue.Enqueue((startingDirection, startingPosition, 0), 1);
+        var visited = new List<(char Direction, Position Position)>();
 
-        return flowMap;
-    }
-
-    private static bool IsInBounds(char[,] map, Position pos) =>
-        pos.X >= 0
-        && pos.X < map.GetLength(0)
-        && pos.Y >= 0
-        && pos.Y < map.GetLength(1);
-
-    private static void Print(char[,] map)
-    {
-        for (var y = 0; y < map.GetLength(1); ++y)
+        while (queue.Count > 0)
         {
-            for (var x = 0; x < map.GetLength(0); ++x)
+            var currentPosition = queue.Dequeue();
+            if (visited.Contains((currentPosition.Direction, currentPosition.Position))) continue;
+
+            if (map[currentPosition.Position.X, currentPosition.Position.Y] == 'E')
             {
-                Console.Write(map[x, y]);
+                return currentPosition.Cost;
             }
 
-            Console.WriteLine();
-        }
-    }
+            visited.Add((currentPosition.Direction, currentPosition.Position));
 
-    private static void PrintFlowMap(char[,] map, FlowMapItem[,] flowMap)
-    {
-        for (var y = 0; y < map.GetLength(1); ++y)
-        {
-            for (var x = 0; x < map.GetLength(0); ++x)
+            //  Move Forward
             {
-                if (flowMap[x, y].IsVisited ?? false)
+                var dir = relativeOptions.First(o => o.Direction == currentPosition.Direction);
+                var target = (X: dir.X + currentPosition.Position.X, Y: dir.Y + currentPosition.Position.Y);
+                if (MovableSpots.Contains(map[target.X, target.Y]))
                 {
-                    Console.Write(flowMap[x, y].Direction);
-                }
-                else
-                {
-                    Console.Write(map[x, y]);
+                    queue.Enqueue((
+                            Direction: dir.Direction,
+                            Position: target,
+                            Cost: currentPosition.Cost + 1),
+                        currentPosition.Cost + 1
+                    );
                 }
             }
 
-            Console.WriteLine();
-        }
-    }
-
-    private static void PrintPath(char[,] map, List<Position> currentPath)
-    {
-        for (var y = 0; y < map.GetLength(1); ++y)
-        {
-            for (var x = 0; x < map.GetLength(0); ++x)
+            // Turn Left
             {
-                if (currentPath.Contains(new Position(x, y)))
+                var leftDir = TurnLeft(currentPosition.Direction);
+                var dir = relativeOptions.First(o => o.Direction == leftDir);
+                var target = (X: dir.X + currentPosition.Position.X, Y: dir.Y + currentPosition.Position.Y);
+                if (MovableSpots.Contains(map[target.X, target.Y]))
                 {
-                    Console.Write("^");
-                }
-                else
-                {
-                    Console.Write(map[x, y]);
+                    queue.Enqueue((
+                            Direction: leftDir,
+                            Position: currentPosition.Position,
+                            Cost: currentPosition.Cost + 1000),
+                        currentPosition.Cost + 1000
+                    );
                 }
             }
 
-            Console.WriteLine();
+            // Turn Right
+            {
+                var rightDir = TurnRight(currentPosition.Direction);
+                var dir = relativeOptions.First(o => o.Direction == rightDir);
+                var target = (X: dir.X + currentPosition.Position.X, Y: dir.Y + currentPosition.Position.Y);
+                if (MovableSpots.Contains(map[target.X, target.Y]))
+                {
+                    queue.Enqueue((
+                            Direction: rightDir,
+                            Position: currentPosition.Position,
+                            Cost: currentPosition.Cost + 1000),
+                        currentPosition.Cost + 1000
+                    );
+                }
+            }
         }
+
+        throw new Exception("No solution");
     }
 
+    private static char TurnLeft(char direction) =>
+        direction switch
+        {
+            '>' => '^',
+            'v' => '>',
+            '<' => 'v',
+            '^' => '<',
+            _ => throw new ArgumentOutOfRangeException(nameof(direction), direction, null)
+        };
+
+    private static char TurnRight(char direction) =>
+        direction switch
+        {
+            '>' => 'v',
+            'v' => '<',
+            '<' => '^',
+            '^' => '>',
+            _ => throw new ArgumentOutOfRangeException(nameof(direction), direction, null)
+        };
 
     private static char[,] ParseInput(string filePath)
     {
